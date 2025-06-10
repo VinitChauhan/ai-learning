@@ -9,6 +9,7 @@ def main():
     
     if st.button("Learn"):
         st.write(f"You selected: {topic}")
+        
         # Here you can add more interactive elements or content based on the selected topic
 
 if __name__ == "__main__":

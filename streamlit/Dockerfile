@@ -2,6 +2,7 @@ FROM python:3.10
 
 WORKDIR /app
 
+
 # Install certificates and set SSL environment
 ENV PYTHONHTTPSVERIFY=0
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt

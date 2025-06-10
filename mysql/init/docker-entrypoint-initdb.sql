@@ -27,3 +27,4 @@ INSERT INTO students (name, age, roll_number, city) VALUES
     ('Mia Green', 20, 'R018', 'Denver'),
     ('Lucas Baker', 18, 'R019', 'Boston'),
     ('Victoria Hall', 19, 'R020', 'Nashville');
+    
