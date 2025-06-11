@@ -12,9 +12,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the application files
+COPY app.py /app/
+COPY templates/ /app/templates/
 
 CMD ["python", "app.py"]
