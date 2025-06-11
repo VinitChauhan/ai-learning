@@ -3,6 +3,8 @@ FROM python:3.10-slim-bullseye
 WORKDIR /app
 
 RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    update-ca-certificates && \
     apt-get install -y --no-install-recommends \
     default-mysql-client \
     gcc \
@@ -15,7 +17,7 @@ RUN apt-get update && \
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 COPY . .
 
