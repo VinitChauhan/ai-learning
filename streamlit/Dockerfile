@@ -1,18 +1,19 @@
-FROM python:3.10
+FROM python:3.10-slim-bullseye
 
 WORKDIR /app
 
-
 # Install certificates and set SSL environment
-ENV PYTHONHTTPSVERIFY=0
+ENV PYTHONHTTPSVERIFY=1
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-# Install dependencies with trusted hosts
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt ./
-RUN pip install --trusted-host pypi.org \
-    --trusted-host files.pythonhosted.org \
-    --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
