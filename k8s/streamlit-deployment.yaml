@@ -1,4 +1,4 @@
-or papiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: streamlit
@@ -12,6 +12,8 @@ spec:
       labels:
         app: streamlit
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: streamlit
         image: ghcr.io/vinitchauhan/ai-learning:streamlit

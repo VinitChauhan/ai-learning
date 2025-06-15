@@ -12,6 +12,8 @@ spec:
       labels:
         app: flask
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: flask
         image: ghcr.io/vinitchauhan/ai-learning:flask
