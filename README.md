@@ -1,194 +1,250 @@
-# AI Learning Project
+# Student Management System
 
-This project is designed to demonstrate a simple application architecture using Streamlit, Flask, and a backend service with MySQL. The application consists of three main components:
+A full-stack application for managing student records, built with Python, Flask, Streamlit, and MySQL.
 
-1. **Streamlit**: A web application framework for creating interactive data applications. The Streamlit app serves as the frontend interface for users to interact with the data.
+## Architecture
 
-2. **Flask**: A lightweight WSGI web application framework in Python. The Flask app acts as a RESTful API that handles requests from the Streamlit frontend and communicates with the backend.
-
-3. **Backend**: This component contains the business logic and interacts with a MySQL database. It processes data and serves it to the Flask API.
+The application consists of four main components:
+- **Backend**: FastAPI service handling database operations
+- **Flask**: Middleware service for business logic
+- **Streamlit**: Frontend UI for user interaction
+- **MySQL**: Database for storing student records
 
 ## Project Structure
 
 ```
-ai-learning
-├── streamlit
-│   └── app.py          # Streamlit application code
-├── flask-app
-│   ├── app.py          # Flask application entry point
-│   └── requirements.txt # Dependencies for Flask app
-├── backend
-│   ├── app.py          # Backend application code
-│   └── requirements.txt # Dependencies for backend app
-├── docker-compose.yml   # Docker Compose configuration
-└── README.md            # Project documentation
+ai-learning/
+├── backend/
+│   ├── app.py              # FastAPI backend application
+│   ├── Dockerfile          # Backend container configuration
+│   └── requirements.txt    # Python dependencies
+│
+├── flask-app/
+│   ├── app.py              # Flask middleware application
+│   ├── Dockerfile          # Flask container configuration
+│   └── requirements.txt    # Python dependencies
+│
+├── streamlit/
+│   ├── app.py              # Streamlit frontend application
+│   ├── Dockerfile          # Streamlit container configuration
+│   └── requirements.txt    # Python dependencies
+│
+├── mysql/
+│   └── init/               # Database initialization scripts
+│       ├── 01_create_students_table.sql
+│       └── 02_insert_dummy_students.sql
+│
+├── k8s/                    # Kubernetes deployment files
+│   ├── mysql-deployment.yaml
+│   ├── backend-deployment.yaml
+│   ├── flask-deployment.yaml
+│   ├── streamlit-deployment.yaml
+│   ├── mysql-init-configmap.yaml
+│   └── dashboard-admin.yaml
+│
+├── docker-compose.yml      # Docker Compose configuration
+├── push-images.sh         # Script for pushing Docker images
+└── README.md              # Project documentation
 ```
-## Services
-- **Streamlit**: Frontend UI (Port 8501)
-- **Flask**: API Service (Port 5002)
-- **Backend**: Database Service (Port 5001)
-- **MySQL**: Database (Port 3306) 
 
-1. **Streamlit Frontend** (Port 8501)
-   - Modern UI for student management
+### Key Components
+
+1. **Backend Service** (`backend/`)
+   - FastAPI application handling database operations
+   - RESTful API endpoints for CRUD operations
+   - MySQL database connection and queries
+
+2. **Flask Middleware** (`flask-app/`)
+   - Handles business logic and request processing
+   - Communicates between frontend and backend
+   - Provides additional API endpoints
+
+3. **Streamlit Frontend** (`streamlit/`)
+   - User interface for student management
    - Real-time data updates
    - Interactive forms and tables
-2. **Flask Middleware** (Port 5002)
-   - Handles API requests from Streamlit
-   - Communicates with the backend service
-   - Provides CORS support
 
-3. **Backend Service** (Port 5001)
-   - Core business logic
-   - Database operations
-   - RESTful API endpoints
+4. **Database** (`mysql/`)
+   - MySQL database configuration
+   - Initialization scripts for table creation
+   - Sample data insertion
 
-4. **MySQL Database** (Port 3306)
-   - Persistent data storage
-   - Student information management
+5. **Kubernetes Configurations** (`k8s/`)
+   - Deployment configurations for all services
+   - Service definitions
+   - ConfigMaps for initialization
+   - Dashboard access configuration
+
+6. **Docker Configuration**
+   - Individual Dockerfiles for each service
+   - Docker Compose for local development
+   - Image push script for container registry
 
 ## Prerequisites
-- Docker
-- Docker Compose
-- Git
 
-## Getting Started
+- Docker Desktop
+- Kubernetes (Kind) for local cluster
+- kubectl
+- GitHub Personal Access Token (for Docker image management)
+
+## Setup Instructions
+
+### 1. Docker Compose Setup (Development)
 
 1. Clone the repository:
-```bash
-git clone https://github.com/VinitChauhan/ai-learning.git
-cd ai-learning
+   ```bash
+   git clone <repository-url>
+   cd ai-learning
+   ```
+
+2. Create a GitHub Personal Access Token:
+   - Go to GitHub Settings > Developer Settings > Personal Access Tokens
+   - Create a new token with `read:packages` scope
+   - Login to GitHub Container Registry:
+     ```bash
+     echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+     ```
+
+3. Start the application:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Access the application:
+   - Streamlit UI: http://localhost:8501
+   - Flask API: http://localhost:5002
+   - Backend API: http://localhost:5001
+
+### 2. Kubernetes Setup (Production-like)
+
+1. Install Kind:
+   ```bash
+   brew install kind
+   ```
+
+2. Create a local Kubernetes cluster:
+   ```bash
+   kind create cluster --name ai-learning-cluster
+   ```
+
+3. Load Docker images into Kind:
+   ```bash
+   kind load docker-image ghcr.io/vinitchauhan/ai-learning:backend ghcr.io/vinitchauhan/ai-learning:flask ghcr.io/vinitchauhan/ai-learning:streamlit --name ai-learning-cluster
+   ```
+
+4. Deploy the application:
+   ```bash
+   kubectl apply -f k8s/mysql-init-configmap.yaml
+   kubectl apply -f k8s/mysql-deployment.yaml
+   kubectl apply -f k8s/backend-deployment.yaml
+   kubectl apply -f k8s/flask-deployment.yaml
+   kubectl apply -f k8s/streamlit-deployment.yaml
+   ```
+
+5. Access the application:
+   - Streamlit UI:
+     ```bash
+     kubectl port-forward service/streamlit 8501:8501
+     ```
+     Then visit: http://localhost:8501
+
+   - Flask API:
+     ```bash
+     kubectl port-forward service/flask 5002:5002
+     ```
+     Then visit: http://localhost:5002
+
+   - Backend API:
+     ```bash
+     kubectl port-forward service/backend 5001:5001
+     ```
+     Then visit: http://localhost:5001
+
+### 3. Kubernetes Dashboard Access
+
+1. Install the Kubernetes Dashboard:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+   ```
+
+2. Create admin user:
+   ```bash
+   kubectl apply -f k8s/dashboard-admin.yaml
+   ```
+
+3. Start the dashboard proxy:
+   ```bash
+   kubectl proxy
+   ```
+
+4. Access the dashboard:
+   - Open: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+   - Get the token:
+     ```bash
+     kubectl -n kubernetes-dashboard create token admin-user
+     ```
+   - Use the token to log in
+
+## Application Features
+
+- Add new students with name, email, and age
+- View list of all students
+- Edit student information
+- Delete student records
+- Real-time updates
+- Responsive UI
+
+## API Endpoints
+
+### Backend API (Port 5001)
+- `GET /students`: Get all students
+- `POST /students/new`: Add new student
+- `POST /students/{id}/edit`: Update student
+- `POST /students/{id}/delete`: Delete student
+
+### Flask API (Port 5002)
+- `GET /students`: Get all students
+- `POST /students/new`: Add new student
+- `POST /students/{id}/edit`: Update student
+- `POST /students/{id}/delete`: Delete student
+
+## Database Schema
+
+```sql
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    age INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
-
-2. Start and Stop services:
-```bash
-docker-compose down
-docker-compose build
-docker-compose up -d
-```
-
-3. Access the applications:
-- Streamlit UI: http://localhost:8501
-- Flask API: http://localhost:5002
-- Backend API: http://localhost:5001
-
-## Environment Variables
-### Flask Service
-- FLASK_ENV=development
-- PYTHONHTTPSVERIFY=0
-- REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-- SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-
-### Backend Service
-- MYSQL_HOST=mysql
-- MYSQL_USER=root
-- MYSQL_PASSWORD=root
-- MYSQL_DATABASE=mydatabase
-
-### MySQL Service
-- MYSQL_ROOT_PASSWORD=root
-- MYSQL_DATABASE=mydatabase
-
-## Docker Images
-All images are available on Docker Hub under the repository:
-- ai-learning:streamlit
-- ai-learning:flask
-- ai-learning:backend
-
-## Features
-
-### Student Management
-- View all students in a responsive table
-- Add new students with validation
-- Edit existing student information
-- Delete students with confirmation
-- Real-time updates after operations
-
-### API Endpoints
-
-#### Flask API (http://localhost:5002)
-- `GET /students` - Get all students
-- `POST /students/new` - Create a new student
-- `POST /students/{id}/edit` - Update a student
-- `POST /students/{id}/delete` - Delete a student
-
-#### Backend API (http://localhost:5001)
-- `GET /api/students` - Get all students
-- `POST /api/students` - Create a new student
-- `PUT /api/students/{id}` - Update a student
-- `DELETE /api/students/{id}` - Delete a student
-
-## Development
-
-To rebuild services:
-```bash
-docker compose build
-```
-
-To view logs:
-```bash
-docker compose logs -f
-```
-
-## Database
-MySQL data is persisted using Docker volumes:
-- mysql_data: Database files
-- ./mysql/init: Initialization scripts
-
-## Networking
-Services communicate through the 'app-network' bridge network.
-
-
-## Usage
-
-- Interact with the Streamlit application to visualize and manipulate data.
-- Use the Flask API to send requests and receive responses from the backend.
-- The backend connects to a MySQL database to store and retrieve data.
-
-## Additional Information
-
-- Ensure that Docker and Docker Compose are installed on your machine.
-- Modify the `requirements.txt` files in the `flask-app` and `backend` directories to add any additional dependencies as needed.
-- Customize the application logic in the respective `app.py` files for each component.
-
-
-### Adding New Features
-
-1. **Frontend (Streamlit)**
-   - Add new UI components in `streamlit/app.py`
-   - Use Streamlit's built-in components for forms and tables
-
-2. **Middleware (Flask)**
-   - Add new routes in `flask-app/app.py`
-   - Update CORS settings if needed
-   - Add new API endpoints
-
-3. **Backend**
-   - Add new business logic in `backend/app.py`
-   - Create new database tables if needed
 
 ## Troubleshooting
 
-### Common Issues
+1. If MySQL pod is stuck in Pending state:
+   ```bash
+   kubectl describe pod -l app=mysql
+   ```
 
-1. **Connection Issues**
-   - Ensure all services are running: `docker-compose ps`
-   - Check service logs: `docker-compose logs <service-name>`
-   - Verify network connectivity between services
+2. To check pod logs:
+   ```bash
+   kubectl logs -l app=<service-name>
+   ```
 
-2. **Database Issues**
-   - Check MySQL connection: `docker-compose logs mysql`
-   - Verify database initialization scripts
-   - Check database credentials in environment variables
+3. To restart a deployment:
+   ```bash
+   kubectl rollout restart deployment/<deployment-name>
+   ```
 
-3. **API Issues**
-   - Verify API endpoints are accessible
-   - Check CORS configuration
-   - Review API response formats
+## Cleanup
 
-## Contributing
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+### Docker Compose
+```bash
+docker-compose down
+```
+
+### Kubernetes
+```bash
+kind delete cluster --name ai-learning-cluster
+```

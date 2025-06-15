@@ -1,6 +1,6 @@
 services:
   streamlit:
-    image: ai-learning:streamlit
+    image: ghcr.io/vinitchauhan/ai-learning:streamlit
     build:
       context: ./streamlit
     ports:
@@ -11,7 +11,7 @@ services:
       - app-network
 
   flask:
-    image: ai-learning:flask
+    image: ghcr.io/vinitchauhan/ai-learning:flask
     build:
       context: ./flask-app
     ports:
@@ -28,7 +28,7 @@ services:
       - app-network
 
   backend:
-    image: ai-learning:backend
+    image: ghcr.io/vinitchauhan/ai-learning:backend
     build:
       context: ./backend
     ports:
@@ -46,7 +46,7 @@ services:
 
   mysql:
     image: mysql:latest
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: mydatabase
@@ -59,9 +59,11 @@ services:
       - ./mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    stop_grace_period: 20s
 
 networks:
   app-network:
