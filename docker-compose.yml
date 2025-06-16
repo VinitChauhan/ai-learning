@@ -1,0 +1,74 @@
+services:
+  streamlit:
+    image: ghcr.io/vinitchauhan/ai-learning:streamlit
+    build:
+      context: ./streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+    networks:
+      - app-network
+
+  flask:
+    image: ghcr.io/vinitchauhan/ai-learning:flask
+    build:
+      context: ./flask-app
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_ENV=development
+      - PYTHONHTTPSVERIFY=0
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+      - BACKEND_URL=http://backend:5001
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    image: ghcr.io/vinitchauhan/ai-learning:backend
+    build:
+      context: ./backend
+    ports:
+      - "5001:5001"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DATABASE=mydatabase
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydatabase
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 20s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local    

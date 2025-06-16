@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+data:
+  01_create_students_table.sql: |
+    CREATE TABLE IF NOT EXISTS students (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      age INT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  02_insert_dummy_students.sql: |
+    INSERT INTO students (name, email, age) VALUES
+    ('John Doe', 'john@example.com', 20),
+    ('Jane Smith', 'jane@example.com', 22),
+    ('Bob Johnson', 'bob@example.com', 21); 
