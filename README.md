@@ -5,8 +5,8 @@ A full-stack application for managing student records, built with Python, Flask,
 ## Architecture
 
 The application consists of four main components:
-- **Backend**: FastAPI service handling database operations
-- **Flask**: Middleware service for business logic
+- **Backend**: Flask service handling database operations
+- **Flask**: Middleware service that proxies requests to the backend
 - **Streamlit**: Frontend UI for user interaction
 - **MySQL**: Database for storing student records
 
@@ -15,7 +15,7 @@ The application consists of four main components:
 ```
 ai-learning/
 ├── backend/
-│   ├── app.py              # FastAPI backend application
+│   ├── app.py              # Flask backend application
 │   ├── Dockerfile          # Backend container configuration
 │   └── requirements.txt    # Python dependencies
 │
@@ -30,9 +30,8 @@ ai-learning/
 │   └── requirements.txt    # Python dependencies
 │
 ├── mysql/
-│   └── init/               # Database initialization scripts
-│       ├── 01_create_students_table.sql
-│       └── 02_insert_dummy_students.sql
+│    └── init/                # Database initialization scripts
+│        └── docker-entrypoint-initdb.sql
 │
 ├── k8s/                    # Kubernetes deployment files
 │   ├── mysql-deployment.yaml
@@ -50,14 +49,14 @@ ai-learning/
 ### Key Components
 
 1. **Backend Service** (`backend/`)
-   - FastAPI application handling database operations
+   - Flask application handling database operations
    - RESTful API endpoints for CRUD operations
    - MySQL database connection and queries
 
 2. **Flask Middleware** (`flask-app/`)
-   - Handles business logic and request processing
-   - Communicates between frontend and backend
-   - Provides additional API endpoints
+   - Proxies requests between the frontend and the backend
+   - Adds CORS and an HTML landing page
+   - Forwards CRUD calls to the backend's REST API
 
 3. **Streamlit Frontend** (`streamlit/`)
    - User interface for student management
@@ -197,10 +196,12 @@ ai-learning/
 ## API Endpoints
 
 ### Backend API (Port 5001)
-- `GET /students`: Get all students
-- `POST /students/new`: Add new student
-- `POST /students/{id}/edit`: Update student
-- `POST /students/{id}/delete`: Delete student
+- `GET /api/students`: Get all students
+- `GET /api/students/<id>`: Get a single student by id
+- `POST /api/students`: Add new student
+- `PUT /api/students/<id>`: Update student
+- `DELETE /api/students/<id>`: Delete student
+- `GET /test-db`: Health check / verify DB connection
 
 ### Flask API (Port 5002)
 - `GET /students`: Get all students
@@ -213,10 +214,11 @@ ai-learning/
 ```sql
 CREATE TABLE students (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    age INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    age INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
